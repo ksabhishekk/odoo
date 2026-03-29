@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.database import Base, engine
 import app.models
 from app.routes.auth import router as auth_router
@@ -8,6 +9,17 @@ from app.routes.expenses import router as expenses_router
 from app.routes.countries import router as countries_router
 
 app = FastAPI(title="Reimbursement Management System API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 try:
     Base.metadata.create_all(bind=engine)
