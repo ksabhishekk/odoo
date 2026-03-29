@@ -16,7 +16,7 @@ class ApprovalStep(Base):
     status = Column(String(50), default="pending")  # pending / approved / rejected
     comment = Column(String(255), nullable=True)
 
-    action_time = Column(DateTime, default=datetime.utcnow)
+    action_time = Column(DateTime, nullable=True)
 
     expense = relationship("Expense")
     approver = relationship("User")

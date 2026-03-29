@@ -21,7 +21,8 @@ class Expense(Base):
     expense_date = Column(Date)
 
     status = Column(String(50), default="pending")
-    current_step = Column(Integer, default=0)
+    current_step = Column(Integer, default=1)
 
     user = relationship("User")
     company = relationship("Company")
+    approval_steps = relationship("ApprovalStep", cascade="all, delete")
