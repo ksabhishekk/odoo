@@ -1,0 +1,59 @@
+@import url('https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Sora:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 228 15% 7%; /* deeper slate #0f1117 */
+    --foreground: 210 40% 98%;
+
+    --card: 225 15% 10%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 228 15% 7%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 239 84% 67%; /* Indigo-500  #6366f1 */
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 222 47% 11%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 236 84% 74%; /* Violet #818cf8 */
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 239 84% 67%;
+
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading tracking-tight;
+  }
+}
+
+/* Glassmorphism utilities */
+.glass {
+  @apply bg-card/60 backdrop-blur-md border border-white/10;
+}
+.glass-panel {
+  @apply bg-[#14161f]/80 backdrop-blur-xl border border-white/5 shadow-2xl;
+}
