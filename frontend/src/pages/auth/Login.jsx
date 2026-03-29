@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { Eye, EyeOff } from "lucide-react";
 
 const schema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -19,7 +20,9 @@ export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
   const { toast } = useToast();
+
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -27,29 +30,57 @@ export default function Login() {
     formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
   });
 
   const onSubmit = async (data) => {
     setLoading(true);
+
     try {
-      // Use our mock interceptor fallback if backend is down
-      const res = await api.post("/auth/login", data);
-      
-      const { user, token } = res.data;
+      // 1) Login -> get JWT token
+      const loginRes = await api.post("/auth/login", data);
+      const token = loginRes.data.access_token;
+
+      if (!token) {
+        throw new Error("No access token received");
+      }
+
+      // Save token first so interceptor works for /users/me
+      localStorage.setItem("token", token);
+
+      // 2) Fetch current user
+      const meRes = await api.get("/users/me");
+      const user = meRes.data;
+
+      // 3) Save auth state
       login(user, token);
-      
+
       toast({
         title: "Welcome back!",
-        description: `Logged in as ${user.name}`,
+        description: `Logged in as ${user.full_name || user.email}`,
       });
-      
-      // Role redirection
-      navigate(user.role === "ADMIN" ? "/admin" : user.role === "MANAGER" ? "/manager" : "/employee");
+
+      // 4) Redirect by role
+      const role = user.role?.toLowerCase();
+
+      if (role === "admin") navigate("/admin");
+      else if (role === "manager") navigate("/manager");
+      else navigate("/employee");
     } catch (err) {
+      console.error("Login error:", err);
+
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+
       toast({
         variant: "destructive",
         title: "Login Failed",
-        description: err.response?.data?.message || "Invalid credentials. Please try again.",
+        description:
+          err.response?.data?.detail ||
+          "Invalid credentials. Please try again.",
       });
     } finally {
       setLoading(false);
@@ -57,67 +88,112 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-background relative flex items-center justify-center overflow-hidden">
+    <div className="min-h-screen bg-background relative flex items-center justify-center overflow-hidden py-12">
       {/* Dynamic Background */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent/20 rounded-full blur-[120px] pointer-events-none" />
 
       <div className="w-full max-w-md p-8 relative z-10">
         <div className="text-center mb-10">
-          <div className="mx-auto w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center shadow-lg shadow-primary/25 mb-6">
+          <div className="mx-auto w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(99,102,241,0.4)] mb-6">
             <span className="text-white font-bold text-xl font-heading">R</span>
           </div>
-          <h1 className="text-3xl font-heading font-bold text-white mb-2">Welcome Back</h1>
-          <p className="text-white/50 text-sm">Sign in to manage your reimbursements.</p>
+          <h1 className="text-4xl font-heading font-bold text-white mb-2">
+            Welcome Back
+          </h1>
+          <p className="text-white/50 text-base">
+            Sign in to manage your reimbursements.
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="glass-panel p-8 rounded-2xl flex flex-col gap-6">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="glass-panel p-8 rounded-2xl flex flex-col gap-6 w-full relative"
+        >
+          {/* Email */}
           <div className="flex flex-col gap-2">
-            <Label htmlFor="email" className="text-white/80">Email Address</Label>
+            <Label htmlFor="email" className="text-white/80">
+              Work Email Address
+            </Label>
             <Input
               id="email"
-              placeholder="you@company.com"
+              type="email"
+              placeholder="jane@company.com"
               className={`bg-black/20 border-white/5 text-white placeholder:text-white/20 focus-visible:ring-primary ${
-                errors.email ? "border-destructive/50 focus-visible:ring-destructive" : ""
+                errors.email
+                  ? "border-destructive/50 focus-visible:ring-destructive"
+                  : ""
               }`}
               {...register("email")}
             />
             {errors.email && (
-              <p className="text-destructive text-xs font-medium">{errors.email.message}</p>
+              <p className="text-destructive text-xs font-medium">
+                {errors.email.message}
+              </p>
             )}
           </div>
 
+          {/* Password */}
           <div className="flex flex-col gap-2">
             <div className="flex justify-between items-center">
-              <Label htmlFor="password" className="text-white/80">Password</Label>
-              <a href="#" className="text-xs text-primary hover:text-primary/80 transition-colors">Forgot password?</a>
+              <Label htmlFor="password" className="text-white/80">
+                Password
+              </Label>
+              <button
+                type="button"
+                className="text-xs text-accent hover:underline underline-offset-4"
+              >
+                Forgot password?
+              </button>
             </div>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              className={`bg-black/20 border-white/5 text-white placeholder:text-white/20 focus-visible:ring-primary ${
-                errors.password ? "border-destructive/50 focus-visible:ring-destructive" : ""
-              }`}
-              {...register("password")}
-            />
+
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                className={`bg-black/20 border-white/5 text-white placeholder:text-white/20 focus-visible:ring-primary pr-10 ${
+                  errors.password
+                    ? "border-destructive/50 focus-visible:ring-destructive"
+                    : ""
+                }`}
+                {...register("password")}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors"
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
+
             {errors.password && (
-              <p className="text-destructive text-xs font-medium">{errors.password.message}</p>
+              <p className="text-destructive text-xs font-medium">
+                {errors.password.message}
+              </p>
             )}
           </div>
 
-          <Button 
-            type="submit" 
-            className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-6 rounded-xl shadow-[0_0_20px_rgba(99,102,241,0.3)] transition-all hover:shadow-[0_0_25px_rgba(99,102,241,0.4)]"
+          <Button
+            type="submit"
+            className="w-full mt-2 bg-gradient-to-r from-primary to-accent hover:opacity-90 text-white font-semibold py-6 rounded-xl shadow-[0_0_20px_rgba(99,102,241,0.3)] transition-all hover:shadow-[0_0_25px_rgba(99,102,241,0.5)] border-t border-white/20"
             disabled={loading}
           >
-            {loading ? "Signing in..." : "Sign in"}
+            {loading ? "Signing in..." : "Sign In"}
           </Button>
 
-          <p className="text-center text-sm text-white/50 mt-2">
-            Don't have an account?{" "}
-            <Link to="/signup" className="text-primary hover:underline underline-offset-4">
-              Create an account
+          <p className="text-center text-sm text-white/50 mt-4">
+            Don&apos;t have a workspace?{" "}
+            <Link
+              to="/signup"
+              className="text-accent hover:underline underline-offset-4"
+            >
+              Create one
             </Link>
           </p>
         </form>

@@ -19,14 +19,16 @@ function ProtectedRoute({ children, allowedRoles }) {
 
   if (!user) return <Navigate to="/login" replace />;
 
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
-    // Wrong role — send them to their own dashboard
+  const role = user.role?.toLowerCase();
+
+  if (allowedRoles && !allowedRoles.includes(role)) {
     const HOME = {
-      ADMIN: "/admin",
-      MANAGER: "/manager",
-      EMPLOYEE: "/employee",
+      admin: "/admin",
+      manager: "/manager",
+      employee: "/employee",
     };
-    return <Navigate to={HOME[user.role] || "/login"} replace />;
+
+    return <Navigate to={HOME[role] || "/login"} replace />;
   }
 
   return children;
@@ -35,9 +37,13 @@ function ProtectedRoute({ children, allowedRoles }) {
 // Redirect "/" based on logged-in role
 function RootRedirect() {
   const { user } = useAuth();
+
   if (!user) return <Navigate to="/login" replace />;
-  if (user.role === "ADMIN") return <Navigate to="/admin" replace />;
-  if (user.role === "MANAGER") return <Navigate to="/manager" replace />;
+
+  const role = user.role?.toLowerCase();
+
+  if (role === "admin") return <Navigate to="/admin" replace />;
+  if (role === "manager") return <Navigate to="/manager" replace />;
   return <Navigate to="/employee" replace />;
 }
 
@@ -57,7 +63,7 @@ function App() {
             <Route
               path="/admin"
               element={
-                <ProtectedRoute allowedRoles={["ADMIN"]}>
+                <ProtectedRoute allowedRoles={["admin"]}>
                   <AdminDashboard />
                 </ProtectedRoute>
               }
@@ -65,7 +71,7 @@ function App() {
             <Route
               path="/manager"
               element={
-                <ProtectedRoute allowedRoles={["MANAGER"]}>
+                <ProtectedRoute allowedRoles={["manager"]}>
                   <ManagerDashboard />
                 </ProtectedRoute>
               }
@@ -73,7 +79,7 @@ function App() {
             <Route
               path="/employee"
               element={
-                <ProtectedRoute allowedRoles={["EMPLOYEE"]}>
+                <ProtectedRoute allowedRoles={["employee"]}>
                   <EmployeeDashboard />
                 </ProtectedRoute>
               }
@@ -83,7 +89,7 @@ function App() {
             <Route
               path="/expenses/:id"
               element={
-                <ProtectedRoute allowedRoles={["ADMIN", "MANAGER", "EMPLOYEE"]}>
+                <ProtectedRoute allowedRoles={["admin", "manager", "employee"]}>
                   <ExpenseDetail />
                 </ProtectedRoute>
               }
@@ -91,7 +97,7 @@ function App() {
             <Route
               path="/settings"
               element={
-                <ProtectedRoute allowedRoles={["ADMIN", "MANAGER", "EMPLOYEE"]}>
+                <ProtectedRoute allowedRoles={["admin", "manager", "employee"]}>
                   <Settings />
                 </ProtectedRoute>
               }
