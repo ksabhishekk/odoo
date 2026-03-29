@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from app.database import Base, engine
-import app.models   # IMPORTANT: loads all models before create_all
+import app.models
+from app.routes.auth import router as auth_router
+from app.routes.users import router as users_router
 
 app = FastAPI(title="Reimbursement Management System API")
 
@@ -11,6 +13,11 @@ try:
 except Exception as e:
     print("Database connection error:", e)
 
+app.include_router(auth_router)
+
 @app.get("/")
 def root():
     return {"message": "Backend is running"}
+
+
+app.include_router(users_router)
