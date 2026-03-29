@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from app.models.expense import Expense
 from app.models.user import User
+from app.models.approval_step import ApprovalStep
 from app.schemas.expense import ExpenseCreateRequest
 from app.services.currency_service import convert_currency
 from app.services.approval_engine import generate_approval_steps, process_expense_action

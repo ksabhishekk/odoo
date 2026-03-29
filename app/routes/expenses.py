@@ -6,7 +6,8 @@ from app.services.expense_service import (
     create_expense,
     get_expenses_for_user,
     get_expense_detail,
-    act_on_expense
+    act_on_expense,
+    get_pending_approvals
 )
 from app.utils.dependencies import get_db, get_current_user, require_employee, require_manager
 
@@ -21,6 +22,12 @@ def submit_expense(
 ):
     return create_expense(data, current_user, db)
 
+@router.get("/pending-approvals", response_model=list[ExpenseResponse])
+def pending_approvals(
+    current_user = Depends(require_manager),
+    db: Session = Depends(get_db)
+):
+    return get_pending_approvals(current_user, db)
 
 @router.get("", response_model=list[ExpenseResponse])
 def get_expenses(
