@@ -1,5 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from fastapi import UploadFile, File
+import os
+from app.services.ocr_service import extract_receipt_data
 
 from app.schemas.expense import ExpenseCreateRequest, ExpenseResponse, ExpenseActionRequest
 from app.services.expense_service import (
@@ -36,7 +39,17 @@ def get_expenses(
 ):
     return get_expenses_for_user(current_user, db)
 
+@router.post("/parse-receipt")
+def parse_receipt(file: UploadFile = File(...)):
+    upload_dir = "uploads"
+    os.makedirs(upload_dir, exist_ok=True)
 
+    file_path = os.path.join(upload_dir, file.filename)
+
+    with open(file_path, "wb") as buffer:
+        buffer.write(file.file.read())
+
+    return extract_receipt_data(file_path)
 @router.get("/{expense_id}", response_model=ExpenseResponse)
 def get_expense(
     expense_id: int,
