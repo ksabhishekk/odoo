@@ -1,19 +1,33 @@
-import { create } from 'zustand'
+import { create } from "zustand";
+
+// Helper to safely parse stored user
+const getStoredUser = () => {
+  try {
+    const raw = localStorage.getItem("user");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
 
 export const useAuth = create((set) => ({
-  user: null, // { name: 'Alice', email: 'alice@example.com', role: 'ADMIN' | 'MANAGER' | 'EMPLOYEE' }
-  token: localStorage.getItem('token') || null,
-  
+  user: getStoredUser(),               // ← hydrates on page load
+  token: localStorage.getItem("token") || null,
+
   login: (userData, token) => {
-    localStorage.setItem('token', token);
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(userData)); // ← persist user
     set({ user: userData, token });
   },
-  
+
   logout: () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
     set({ user: null, token: null });
   },
-  
-  // For hydrate on load
-  setUser: (user) => set({ user }),
-}))
+
+  setUser: (user) => {
+    localStorage.setItem("user", JSON.stringify(user));
+    set({ user });
+  },
+}));
