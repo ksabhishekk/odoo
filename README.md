@@ -85,14 +85,6 @@ A FULL-STACK APP TO AUTOMATE EXPENSE REIMBURSEMENTS WITH STRUCTURED APPROVAL WOR
 
 ---
 
-## 🎨 FRONTEND SETUP
-
-```bash id="0pt9dn"
-npm install
-npm run dev
-```
-
----
 
 ## 🔑 ENVIRONMENT VARIABLES
 
