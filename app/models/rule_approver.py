@@ -9,7 +9,6 @@ class RuleApprover(Base):
 
     rule_id = Column(Integer, ForeignKey("approval_rules.id"))
     user_id = Column(Integer, ForeignKey("users.id"))
-
     sequence = Column(Integer, nullable=False)
 
     rule = relationship("ApprovalRule")
